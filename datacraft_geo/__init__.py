@@ -1,4 +1,9 @@
+import json
 import logging
+import os.path
+from typing import Union
+
+from shapely.geometry import shape
 
 import datacraft
 import datacraft._registered_types.common as common
@@ -9,6 +14,7 @@ _GEO_UTM_TEMPLATE = "geo_utm_template"
 
 _MGRS_KEY = 'geo.mgrs'
 _UTM_KEY = 'geo.utm'
+_GEO_CLIPPED_KEY = 'geo.pair.clipped'
 
 _log = logging.getLogger(__name__)
 
@@ -95,6 +101,7 @@ def load_custom():
     def _configure_utm_supplier(field_spec, loader: datacraft.Loader):
         """ configure the supplier for utm types """
         config = datacraft.utils.load_config(field_spec, loader)
+        # want the pair to be returned as a list, not combined as string
         if 'as_list' not in config or config['as_list'] is False:
             config['as_list'] = True
         if 'start_lat' not in config or config['start_lat'] < -80.0:
@@ -106,7 +113,7 @@ def load_custom():
         pair_supplier = datacraft.suppliers.geo_pair(**config)
         template = config.get('template', datacraft.registries.get_default(_GEO_UTM_TEMPLATE))
         engine = datacraft.outputs.processor(template=template)
-        return suppliers.utm_supplier(pair_supplier, engine, lat_first)
+        return suppliers.utm_supplier(pair_supplier, engine, lat_first)  # type: ignore
 
     @datacraft.registry.usage(_MGRS_KEY)
     def _configure_utm_usage():
@@ -120,6 +127,33 @@ def load_custom():
             }
         }
         return common.standard_example_usage(example, 3)
+
+    @datacraft.registry.types(_GEO_CLIPPED_KEY)
+    def _configure_geo_clipped_supplier(field_spec: dict, loader: datacraft.Loader):
+        """ configure the usage for clipped geo pair type """
+        config = datacraft.utils.load_config(field_spec, loader)
+        if 'geojson' not in config:
+            raise datacraft.SpecException(f'geojson is required config for {_GEO_CLIPPED_KEY} type: '
+                                          f'{json.dumps(field_spec)}')
+        geojson = config.pop('geojson')
+        # check for required keys
+        if not isinstance(geojson, dict):
+            # if not found check if this is a pointer to a file on disk
+            geojson_path = _resolve_geojson_as_path(geojson, loader.datadir)
+            if geojson_path is None:
+                raise datacraft.SpecException('geojson config must be valid GeoJSON or path to GeoJSON file on disk')
+            else:
+                with open(geojson_path, 'r', encoding='utf-8') as fp:
+                    geojson = json.load(fp)
+
+        return suppliers.point_in_bounds(geojson, **config)
+
+    def _resolve_geojson_as_path(geojson: str, datadir: str) -> Union[str, None]:
+        if os.path.exists(geojson):
+            return geojson
+        data_dir_path = os.path.join(datadir, geojson)
+        if os.path.exists(data_dir_path):
+            return data_dir_path
 
     def _get_pair_supplier(field_spec, loader):
         config = datacraft.utils.load_config(field_spec, loader)

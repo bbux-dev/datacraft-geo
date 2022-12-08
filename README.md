@@ -73,3 +73,9 @@ $ datacraft -s geo.utm.custom.json -i 3 -r 1 --format json -x -l warning
 {"utm_custom": "45J 300889/6854467"}
 {"utm_custom": "44R 288307/2890462"}
 ```
+
+## Geo Pair Clipped
+
+```shell
+datacraft.exe --inline '{foo:geo.pair.clipped: { config: {geojson: clip.geo.json}}}'
+```
