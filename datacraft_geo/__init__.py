@@ -159,7 +159,8 @@ def _configure_clipped_pair_supplier(field_spec: dict, loader: datacraft.Loader)
         # if not found check if this is a pointer to a file on disk
         geojson_path = _resolve_geojson_as_path(geojson, loader.datadir)
         if geojson_path is None:
-            raise datacraft.SpecException('geojson config must be valid GeoJSON or path to GeoJSON file on disk')
+            raise datacraft.SpecException(
+                f'geojson config must be valid GeoJSON or path to GeoJSON file on disk: ' + str(geojson))
         else:
             with open(geojson_path, 'r', encoding='utf-8') as fp:
                 geojson = json.load(fp)
@@ -190,6 +191,8 @@ def _resolve_geojson_as_path(geojson: str, datadir: str) -> Union[str, None]:
         return None
     if os.path.exists(geojson):
         return geojson
+    if datadir is None:
+        datadir = '.'
     data_dir_path = os.path.join(datadir, geojson)
     if os.path.exists(data_dir_path):
         return data_dir_path
