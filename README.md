@@ -79,6 +79,16 @@ $ datacraft -s geo.utm.custom.json -i 3 -r 1 --format json -x -l warning
 These types are extensions to the existing datacraft geo types to support clipping of the points using
 geojson to specify valid polygon boundaries.
 
+Types
+
+| name          | description                                                                   |
+|---------------|-------------------------------------------------------------------------------|
+| geo.pair.clip | coordinate pair as list with longitude first, unless lat_first=True specified |
+| geo.lat.clip  | latitude from a coordinate pair bounded by the geojson                        |
+| geo.long.clip | longitude from a coordinate pair bounded by the geojson                       |
+| geo.utm       | also supports clipping                                                        |
+| geo.mgrs      | also supports clipping                                                        |
+
 Example:
 
 ```python
@@ -92,5 +102,71 @@ geojson = {
 }
 shape(geojson['geometry'])
 ```
+
 ![Boundary](./boundary.svg)
-<img src="./boundary.svg">
+
+The image above describes the boundary of where we want our points to exist. To reference this geojson boundary, we
+can use the `geojson` config parameter in two ways.
+
+1. as the raw geojson
+```json
+{
+  "coords": {
+    "type": "geo.pair.clip",
+    "config": {
+      "geojson": {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[23.0843,53.1544],[23.0845,53.1544],[23.0859,53.1535],[23.0843,53.1544]]]}},
+      "join_with": ","
+    }
+  }
+}
+```
+2. as the file name path to the geojson file
+```json
+{
+  "coords": {
+    "type": "geo.pair.clip",
+    "config": {
+      "geojson": "/path/to/clip.geo.json",
+      "join_with": ","
+    }
+  }
+}
+```
+Instead of hard-coding the path, you can specify just the file name then use the `--data-dir` to specify where to look
+for it and other data related files.
+
+
+### Multiple Polygons
+
+You can use multiple polygons as boundaries by using a GeoJSON FeatureCollection:
+
+```json
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[ 23.0843, 53.1544 ],
+           [ 23.0845, 53.1544 ],
+           [ 23.0859, 53.1535 ],
+           [ 23.0843, 53.1544 ]]
+        ]
+      }
+    },{
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[ 33.0843, 43.1544 ],
+           [ 33.0845, 43.1544 ],
+           [ 33.0859, 43.1535 ],
+           [ 33.0843, 43.1544 ]]
+        ]
+      }
+    }
+  ]
+}
+```

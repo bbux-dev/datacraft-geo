@@ -35,8 +35,9 @@ def _get_mgrs_schema():
                     "end_lat": {"type": "number", "minimum": -90, "maximum": 90},
                     "start_long": {"type": "number", "minimum": -180, "maximum": 180},
                     "end_long": {"type": "number", "minimum": -180, "maximum": 180},
+                    "geojson": {"type": "object"}
                 },
-                "additionalProperties": False
+                "additionalProperties": True
             }
         }
     }
@@ -50,7 +51,9 @@ def _configure_mgrs_supplier(field_spec, loader: datacraft.Loader):
         pair_supplier = _configure_clipped_pair_supplier(field_spec, loader)
     else:
         pair_supplier = _get_pair_supplier(field_spec, loader)
-    return suppliers.mgrs_supplier(pair_supplier)
+    lat_first = datacraft.utils.is_affirmative(
+        'lat_first', config, datacraft.registries.get_default('geo_lat_first'))
+    return suppliers.mgrs_supplier(pair_supplier, lat_first)
 
 
 @datacraft.registry.usage(_MGRS_KEY)
@@ -92,8 +95,9 @@ def _get_utm_schema():
                     },
                     "start_long": {"type": "number", "minimum": -180, "maximum": 180},
                     "end_long": {"type": "number", "minimum": -180, "maximum": 180},
+                    "geojson": {"type": "object"}
                 },
-                "additionalProperties": False
+                "additionalProperties": True
             }
         }
     }
@@ -182,6 +186,8 @@ def _configure_clipped_long_supplier(field_spec: dict, loader: datacraft.Loader)
 
 
 def _resolve_geojson_as_path(geojson: str, datadir: str) -> Union[str, None]:
+    if geojson is None:
+        return None
     if os.path.exists(geojson):
         return geojson
     data_dir_path = os.path.join(datadir, geojson)

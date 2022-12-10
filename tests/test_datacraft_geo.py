@@ -11,7 +11,7 @@ def pair_supplier():
 
 
 def test_basic_mgrs(pair_supplier):
-    supplier = impl.mgrs_supplier(pair_supplier)
+    supplier = impl.mgrs_supplier(pair_supplier, False)
 
     val = supplier.next(0)
 
@@ -34,7 +34,7 @@ def test_mgrs_from_spec():
             "type": "geo.mgrs"
         }
     }
-    one = datacraft.entries(spec, 1)[0]
+    one = datacraft.entries(spec, 1, enforce_schema=True)[0]
     assert len(one['mgrs']) <= 15
 
 

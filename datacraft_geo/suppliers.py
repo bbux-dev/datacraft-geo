@@ -12,25 +12,29 @@ _log = logging.getLogger(__name__)
 
 
 class _MgrsSupplier(datacraft.ValueSupplierInterface):
-    def __init__(self, pair_supplier):
+    def __init__(self, pair_supplier, lat_first):
         self.pair_supplier = pair_supplier
         self.mgrs = mgrs.MGRS()
+        self.lat_first = lat_first
 
     def next(self, iteration: int):
         geo_pair = self.pair_supplier.next(iteration)
-        return self.mgrs.toMGRS(geo_pair[0], geo_pair[1])
+        if self.lat_first:
+            return self.mgrs.toMGRS(geo_pair[0], geo_pair[1])
+        return self.mgrs.toMGRS(geo_pair[1], geo_pair[0])
 
 
-def mgrs_supplier(pair_supplier: datacraft.ValueSupplierInterface):
+def mgrs_supplier(pair_supplier: datacraft.ValueSupplierInterface, lat_first: bool):
     """
 
     Args:
         pair_supplier: supplies tuples/list of (lat, long)
+        lat_first: if latitude is the first output of the pair_supplier
 
     Returns:
         a value supplier for the MGRS coordinates
     """
-    return _MgrsSupplier(pair_supplier)
+    return _MgrsSupplier(pair_supplier, lat_first)
 
 
 class _UtmSupplier(datacraft.ValueSupplierInterface):
@@ -83,12 +87,11 @@ class _PointInBoundsSupplier(datacraft.ValueSupplierInterface):
     def __init__(self,
                  polygons: list,
                  pair_suppliers: list,
-                 lat_first: bool = False,
-                 join_with: str = None):
+                 **kwargs):
         self.polygons = polygons
         self.pair_suppliers = pair_suppliers
-        self.lat_first = lat_first
-        self.join_with = join_with
+        self.lat_first = kwargs.get('lat_first', False)
+        self.join_with = kwargs.get('join_with', None)
 
     def next(self, i: int):
         # sample one of our polygons
