@@ -3,8 +3,6 @@ import logging
 import os.path
 from typing import Union
 
-from shapely.geometry import shape
-
 import datacraft
 import datacraft._registered_types.common as common
 
@@ -159,7 +157,7 @@ def _configure_clipped_pair_supplier(field_spec: dict, loader: datacraft.Loader)
     # check for required keys
     if not isinstance(geojson, dict):
         # if not found check if this is a pointer to a file on disk
-        geojson_path = _resolve_geojson_as_path(geojson, loader.datadir)
+        geojson_path = _resolve_geojson_as_path(geojson, loader.datadir)  # type: ignore
         if geojson_path is None:
             raise datacraft.SpecException(
                 f'geojson config must be valid GeoJSON or path to GeoJSON file on disk: ' + str(geojson))
@@ -272,6 +270,7 @@ def _resolve_geojson_as_path(geojson: str, datadir: str) -> Union[str, None]:
     data_dir_path = os.path.join(datadir, geojson)
     if os.path.exists(data_dir_path):
         return data_dir_path
+    return None
 
 
 def _get_pair_supplier(field_spec, loader):

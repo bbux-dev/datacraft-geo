@@ -4,7 +4,7 @@ import random
 import mgrs  # type: ignore
 import utm  # type: ignore
 
-from shapely.geometry import shape, Point
+from shapely.geometry import shape, Point  # type: ignore
 
 import datacraft
 
