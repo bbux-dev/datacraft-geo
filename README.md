@@ -74,8 +74,23 @@ $ datacraft -s geo.utm.custom.json -i 3 -r 1 --format json -x -l warning
 {"utm_custom": "44R 288307/2890462"}
 ```
 
-## Geo Pair Clipped
+## Geo Lat/Long/Pair Clipped
 
-```shell
-datacraft.exe --inline '{foo:geo.pair.clipped: { config: {geojson: clip.geo.json}}}'
+These types are extensions to the existing datacraft geo types to support clipping of the points using
+geojson to specify valid polygon boundaries.
+
+Example:
+
+```python
+from shapely.geometry import shape
+geojson = {
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [[[23.0843, 53.1544], [23.0859, 53.1544], [23.0859, 53.1535], [23.0843, 53.1544]]]
+  }
+}
+shape(geojson['geometry'])
 ```
+![Boundary](./boundary.svg)
+<img src="./boundary.svg">

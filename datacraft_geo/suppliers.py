@@ -148,3 +148,28 @@ def _point_supplier_for_polygon(polygon):
                                         end_long=end_long,
                                         as_list=True)
 
+
+class _IndexedPairValueSupplier(datacraft.ValueSupplierInterface):
+    def __init__(self,
+                 pair_supplier: datacraft.ValueSupplierInterface,
+                 index: int):
+        self.pair_supplier = pair_supplier
+        self.index = index
+
+    def next(self, iteration):
+        pair = self.pair_supplier.next(iteration)
+        return pair[self.index]
+
+
+def lat_supplier(pair_supplier: datacraft.ValueSupplierInterface, **config):
+    lat_first = config.get('lat_first', datacraft.registries.get_default('geo_lat_first'))
+    if lat_first:
+        return _IndexedPairValueSupplier(pair_supplier, index=0)
+    return _IndexedPairValueSupplier(pair_supplier, index=1)
+
+
+def long_supplier(pair_supplier: datacraft.ValueSupplierInterface, **config):
+    lat_first = config.get('lat_first', datacraft.registries.get_default('geo_lat_first'))
+    if lat_first:
+        return _IndexedPairValueSupplier(pair_supplier, index=1)
+    return _IndexedPairValueSupplier(pair_supplier, index=0)
